@@ -15,3 +15,9 @@ after that i decided to get into javascript, HTML, and CSS so i could make websi
 It was very hard at first and then i discovered something called canvas that allowed me to drop CSS altogether and code in only javascript
 Which made it much easier for me. This entire journey has been a huge learning process and has definetly made me a better debugger.
 And i couldn't have done it without the support of my parents so I thank them very much.
+
+
+this version is for my theme. Theme #1 which addresses solutions for making games for people with disabilities. 
+this game is for visually impaired people. visually impaired people do have computers and the way they navigate is by using something called 'Screen reader'  
+which is available on all computers. if it is not activated you won't here anything from this game. I figured that instead of talkin about the issue i could
+actually do something about it and make a game for people with disabilities.
