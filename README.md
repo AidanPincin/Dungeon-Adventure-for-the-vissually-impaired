@@ -18,6 +18,4 @@ And i couldn't have done it without the support of my parents so I thank them ve
 
 
 this version is for my theme for my school contest. Theme 1 which addresses solutions for making games for people with disabilities. 
-this game is for visually impaired people. visually impaired people do have computers and the way they navigate is by using something called 'Screen reader'  
-which is available on all computers. if it is not activated you won't here anything from this game. I figured that instead of talkin about the issue i could
-actually do something about it and make a game for people with disabilities.
+this game is for visually impaired people. visually impaired people do have computers and the way they navigate is by using something called 'Screen reader'  which is available on all computers. if it is not activated you won't here anything from this game. I figured that instead of talkin about the issue i could actually do something about it and make a game for people with disabilities.
