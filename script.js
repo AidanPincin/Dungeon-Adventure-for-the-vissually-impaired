@@ -349,7 +349,7 @@ function town(){
         shop()
     }
     else if (input == 'go to dungeon' || input == 'dungeon'){
-        speak('You are in the dungeon. Monster battles will be added soon!')
+        speak('You are in the dungeon')
         setTimeout(() => {dungeon()},200)
     }
     else if (input == 'help'){
