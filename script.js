@@ -11,7 +11,7 @@ function speak(text, priority){
     }, 100)
     window.setTimeout(function (){
         document.body.removeChild(document.getElementById(id))
-    }, 30000)
+    }, 60000)
 }
 class Fists{
     constructor(){
@@ -143,6 +143,11 @@ class Goblin{
         this.description = 'You notice a large, green, creature with short, round ears and small eyes. It is a Goblin.'
         this.dice = 2
         this.sides = 6
+        this.name = 'goblin'
+        this.dexterity = 10
+        this.armorClass = 10
+        this.hp = Math.round(Math.random()*10+15)
+        this.gold = Math.round(Math.random()*10+5)
     }
 }
 class Bear{
@@ -150,6 +155,11 @@ class Bear{
         this.description = 'You notice a giant, brown, furry, creature with large claws and a threatening roar. It is a Bear.'
         this.dice = 3
         this.sides = 6
+        this.name = 'bear'
+        this.dexterity = 12
+        this.armorClass = 12
+        this.hp = Math.round(Math.random()*20+20)
+        this.gold = Math.round(Math.random()*20+10)
     }
 }
 class Slime{
@@ -157,6 +167,11 @@ class Slime{
         this.description = 'You notice a small, icky, sticky, green creature on the floor. It is a slime'
         this.dice = 1
         this.sides = 6
+        this.name = 'slime'
+        this.dexterity = 8
+        this.armorClass = 8
+        this.hp = Math.round(Math.random()*5+10)
+        this.gold = Math.round(Math.random()*5+5)
     }
 }
 class Troll{
@@ -164,6 +179,11 @@ class Troll{
         this.description = 'You notice a large, purple-blue-ish creature with a long grey beard and long, pointy ears. It is a Troll'
         this.dice = 2
         this.sides = 8
+        this.name = 'troll'
+        this.dexterity = 11
+        this.armorClass = 11
+        this.hp = Math.round(Math.random()*15+15)
+        this.gold = Math.round(Math.random()*15+5)
     }
 }
 class Skeleton{
@@ -171,8 +191,15 @@ class Skeleton{
         this.description = 'You notice a medium sized, reanimated pile of bones with a large metal helmet with spikes on it. It is a skeleton.'
         this.dice = 1
         this.sides = 10
+        this.name = 'skeleton'
+        this.dexterity = 13
+        this.armorClass = 10
+        this.hp = Math.round(Math.random()*10+5)
+        this.gold = Math.round(Math.random()*10+5)
     }
 }
+var mustRoll = 8
+var revivesLeft = 3
 var room = 0
 const rooms = [new Room(true,true,false,false,1,'town',undefined,undefined), new Room(true,true,true,false,2,0,3,undefined,new Slime()), new Room(true,true,true,true,12,1,7,8,new Skeleton()), // 2
 new Room(false,false,true,true,undefined,undefined,4,1,new Goblin()), new Room(true,false,true,true,6,undefined,5,3,new Troll()), //4
@@ -210,6 +237,10 @@ const player = new Player()
 player.backpack = []
 player.weapon = new Fists()
 player.armor = new NoArmor()
+player.dexterity = 18
+player.dexterityBonus = 3
+player.strength = 18
+player.strengthBonus = 3
 var page = 'start'
 var step = 1
 var text = 'Welcome to dungeon adventure! Press enter to play'
@@ -230,6 +261,16 @@ function Roll(dice,min=true,sides=6){
         total -= Math.min(...rolls)
     }
     return { 'rolls': rolls, 'total': total }
+}
+function generateMonsterChoice(){
+    let roll = Roll(1,false,3)
+    if (roll.total == 1){
+        return 'up high'
+    }
+    else if (roll.total == 2){
+        return 'in the middle'
+    }
+    else{return 'down low'}
 }
 function globalInputs(){
     if (input == 'what are my stats' || input == 'tell me my stats' || input == 'stats'){
@@ -397,59 +438,67 @@ function dungeon(){
         txt = txt+' East there is a room.'
     }
     if (rooms[room].monster != undefined){
+        page = 'battle'
+        let monster = rooms[room].monster
+        monster.step = 1
+        monster.turn = undefined
         txt = txt+rooms[room].monster.description
+        txt = txt+'. First we must roll to see who goes first. You need to roll the '+monster.name+"'s dexterity of "+monster.dexterity+" or higher on a 20-sided die. This requires a dexterity test."+
+        " Your dexterity of "+player.dexterity+" gives you a bonus of "+player.dexterityBonus+" to the roll. press enter to continue."
     }
     speak(txt)
-    setTimeout(() => {input = window.prompt('What would you like to do?').toLowerCase();
-    if (input == 'south' || input == 's' || input == 'move south' || input == 'go south'){
-        if (rooms[room].south == true){
-            if (rooms[room].southRoom != 'town'){
-                room = rooms[room].southRoom
+    if (rooms[room].monster == undefined){
+        setTimeout(() => {input = window.prompt('What would you like to do?').toLowerCase();
+        if (input == 'south' || input == 's' || input == 'move south' || input == 'go south'){
+            if (rooms[room].south == true){
+                if (rooms[room].southRoom != 'town'){
+                    room = rooms[room].southRoom
+                    setTimeout(() => {dungeon()},200)
+                }
+                else{town()}
+            }
+            else{
+                speak('You cannot go that way')
                 setTimeout(() => {dungeon()},200)
             }
-            else{town()}
         }
-        else{
-            speak('You cannot go that way')
+        else if (input == 'north' || input == 'n' || input == 'move north' || input == 'go north'){
+            if (rooms[room].north == true){
+                room = rooms[room].northRoom
+            }
+            else{
+                speak('You cannot go that way')
+            }
             setTimeout(() => {dungeon()},200)
         }
-    }
-    else if (input == 'north' || input == 'n' || input == 'move north' || input == 'go north'){
-        if (rooms[room].north == true){
-            room = rooms[room].northRoom
+        else if (input == 'west' || input == 'w' || input == 'move west' || input == 'go west'){
+            if (rooms[room].west == true){
+                room = rooms[room].westRoom
+            }
+            else{
+                speak('You cannot go that way')
+            }
+            setTimeout(() => {dungeon()},200)
+        }
+        else if (input == 'east' || input == 'e' || input == 'move east' || input == 'go east'){
+            if (rooms[room].east == true){
+                room = rooms[room].eastRoom
+            }
+            else{
+                speak('You cannot go that way')
+            }
+            setTimeout(() => {dungeon()},200)
+        }
+        else if (input == 'help'){
+            speak('here is a full list of commands you can do in the dungeon. move, then one of the following directions: north,south,east, and west. what are my stats. equip, and then the armor or weapon you want and have. drink, and then the potion you want and have.')
+            setTimeout(() => {dungeon()},200)
         }
         else{
-            speak('You cannot go that way')
+            globalInputs()
+            setTimeout(() => {dungeon()},200)
         }
-        setTimeout(() => {dungeon()},200)
+        },200)
     }
-    else if (input == 'west' || input == 'w' || input == 'move west' || input == 'go west'){
-        if (rooms[room].west == true){
-            room = rooms[room].westRoom
-        }
-        else{
-            speak('You cannot go that way')
-        }
-        setTimeout(() => {dungeon()},200)
-    }
-    else if (input == 'east' || input == 'e' || input == 'move east' || input == 'go east'){
-        if (rooms[room].east == true){
-            room = rooms[room].eastRoom
-        }
-        else{
-            speak('You cannot go that way')
-        }
-        setTimeout(() => {dungeon()},200)
-    }
-    else if (input == 'help'){
-        speak('here is a full list of commands you can do in the dungeon. move, then one of the following directions: north,south,east, and west. what are my stats. equip, and then the armor or weapon you want and have. drink, and then the potion you want and have.')
-        setTimeout(() => {dungeon()},200)
-    }
-    else{
-        globalInputs()
-        setTimeout(() => {dungeon()},200)
-    }
-    },200)
 }
 window.addEventListener('keydown', function(e){
     if (e.key == 'Enter'){
@@ -494,6 +543,14 @@ window.addEventListener('keydown', function(e){
                     setTimeout(() => {input = window.prompt("the attributes you haven't assigned yet are "+stats).toLowerCase();
                     if (stats.indexOf(input) != -1){
                         player[input] = roll.total
+                        let bonus = input+'Bonus'
+                        if(roll.total<=5){player[bonus] = -3}
+                        else if(roll.total<=7){player[bonus] = -2}
+                        else if(roll.total<=9){player[bonus] = -1}
+                        else if(roll.total<=11){player[bonus] = 0}
+                        else if(roll.total<=13){player[bonus] = 1}
+                        else if(roll.total<=15){player[bonus] = 2}
+                        else{player[bonus] = 3}
                         text = 'Your '+input+' is now '+player[input]
                         speak(text)
                         stats.splice(stats.indexOf(input),1)
@@ -540,5 +597,229 @@ window.addEventListener('keydown', function(e){
         else if (page == 'town'){
             town()
         }
+        else if (page == 'battle'){
+            let monster = rooms[room].monster
+            if(monster.step == 1){
+                let roll = Roll(1,false,20)
+                let total = roll.total+player.dexterityBonus
+                let txt = 'Rolling the die you got a '+roll.total+' plus your dexterity bonus of '+player.dexterityBonus+' gives you a total of '+total
+                if (total>=monster.dexterity){
+                    monster.turn = 'player'
+                    txt = txt+'. You rolled higher than the '+monster.name+"'s dexterity of "+monster.dexterity+', so you get to go first. press enter to continue'
+                }
+                else{
+                    monster.turn = 'monster'
+                    txt = txt+'. You rolled lower than the '+monster.name+"'s dexterity of "+monster.dexterity+", so the "+monster.name+" gets to go first. press enter to continue"
+                }
+                speak(txt)
+                monster.step = 2
+            }
+            else if (monster.turn == 'player'){
+                if (monster.step == 2){
+                    function b(){
+                        speak('It is your turn. some things you can do are. Attack or drink and then the potion you want and have')
+                        setTimeout(() => {input = window.prompt('What would you like to do?').toLowerCase();
+                        if (input == 'attack' || input == 'a'){
+                            function a(){
+                                input = window.prompt('How would you like to attack? High, middle, or low?').toLowerCase();
+                                if (input == 'high'){
+                                    monster.playerChoice = 'up high'
+                                }
+                                else if (input == 'middle'){
+                                    monster.playerChoice = 'in the middle'
+                                }
+                                else if (input == 'low'){
+                                    monster.playerChoice = 'down low'
+                                }
+                                if (input == 'high' || input == 'middle' || input == 'low'){
+                                    monster.monsterChoice = generateMonsterChoice()
+                                    speak('You attack '+monster.playerChoice+'. The '+monster.name+' defends '+monster.monsterChoice+'. press enter to continue')
+                                    monster.step = 3
+                                }
+                                else{
+                                    speak('Invalid input')
+                                    setTimeout(() => {a()},200)
+                                }
+                            }
+                            a()
+                        }
+                        else if (input == 'drink healing potion' || input == 'use healing potion'){
+                            if (player.backpack.find(item => item.name === 'healing potion')){
+                                if (player.backpack.find(potion => potion.name === 'healing potion')){
+                                    if (player.hp<player.max_hp){
+                                        let roll = Roll(5,false,6)
+                                        player.hp += roll.total
+                                        if (player.hp>player.max_hp){
+                                            player.hp = player.max_hp
+                                        }
+                                        let potion = player.backpack.find(potion => potion.name === 'healing potion')
+                                        potion.uses -= 1
+                                        if (potion.uses == 0){
+                                            player.backpack.splice(player.backpack.indexOf(potion),1)
+                                        }
+                                        let potions = player.backpack.filter(potion => potion.name === 'healing potion')
+                                        let totalUses = 0
+                                        for (let i=0; i<potions.length; i++){
+                                            totalUses += potions[i].uses
+                                        }
+                                        monster.turn = 'monster'
+                                        monster.step = 2
+                                        speak('You drink your healing potion. Rolling the dice you got '+roll.rolls+' for a total of '+roll.total+'. so you heal for '+roll.total+' and you now have '+player.hp+' hit points left. Your healing potion has '+totalUses+' left')
+                                    }
+                                    else{
+                                        speak('You are already at full health')
+                                    }
+                                }
+                                else{
+                                    speak("you don't have any healing potions")
+                                }
+                            }
+                        }
+                        else{
+                            speak('Invalid Input')
+                            setTimeout(() => {b()},200)
+                        }
+                        },200)
+                    }
+                    b()
+                }
+                else if (monster.step == 3){
+                    let roll = Roll(1,false,20)
+                    let total = player.strengthBonus+roll.total
+                    let txt = 'Now we must determine if you hit the '+monster.name+'. You must roll higher than the '+monster.name+"'s armor class of "+monster.armorClass+
+                    " on a 20-sided die. This requires a strength test. Your strength of "+player.strength+' gives you a bonus of '+player.strengthBonus+' to your roll.'+
+                    ' Rolling the die,  you got a '+roll.total+' plus your strength bonus of '+player.strengthBonus+' gets you a total of '+total
+                    if (total>=monster.armorClass){
+                        monster.step = 4
+                        txt = txt+'. You rolled higher than the '+monster.name+"'s armor class of "+monster.armorClass+' and hit it. press enter to continue'
+                    }
+                    else{
+                        monster.step = 2
+                        monster.turn = 'monster'
+                        txt = txt+'. You rolled lower than the '+monster.name+"'s armor class of "+monster.armorClass+' and miss. press enter to continue'
+                    }
+                    speak(txt)
+                }
+                else if (monster.step == 4){
+                    let roll = Roll(player.weapon.dice,false,player.weapon.sides)
+                    let dmg = roll.total
+                    let txt = 'You swing at the '+monster.name+' with your '+player.weapon.name+". Rolling for damage you got "+
+                    roll.rolls+' for a total of '+dmg
+                    if (monster.playerChoice == monster.monsterChoice){
+                        dmg = Math.ceil(dmg/2)
+                        monster.hp -= dmg
+                        if (monster.hp<0){
+                            monster.hp = 0
+                        }
+                        txt = txt+'. But since the '+monster.name+'successfully defended the attack you only do half damage rounded up. So you do a total of '+dmg+' damage to the '+monster.name+
+                        '. The '+monster.name+' has '+monster.hp+' hit points left'
+                    }
+                    else{
+                        monster.hp -= dmg
+                        if (monster.hp<0){monster.hp = 0}
+                        txt = txt+'. So you do '+dmg+' damage to the '+monster.name+'. The '+monster.name+' has '+monster.hp+' hit points left'
+                        if (monster.hp==0){
+                            player.gold += monster.gold
+                            txt = txt+'. You have defeated the '+monster.name+'! searching the '+monster.name+' you find '+monster.gold+' gold and you now have '+player.gold+' gold'
+                        }
+                    }
+                    speak(txt+'. press enter to continue')
+                    if (monster.hp == 0){
+                        page = 'town'
+                        rooms[room].monster = undefined
+                        setTimeout(() => {dungeon()},200)
+                    }
+                    else{
+                        monster.step = 2
+                        monster.turn = 'monster'
+                    }
+                }
+            }
+            else if (monster.turn == 'monster'){
+                if (monster.step == 2){
+                    function a(){
+                        speak('The '+monster.name+' is attacking you. How will you attempt to defend?')
+                        setTimeout(() => {input = window.prompt(' High, middle, or low?').toLowerCase();
+                            if (input == 'high'){monster.playerChoice = 'up high'}
+                            if (input == 'middle'){monster.playerChoice = 'in the middle'}
+                            if (input == 'low'){monster.playerChoice = 'down low'}
+                            if (input == 'low' || input == 'middle' || input == 'high'){
+                                monster.monsterChoice = generateMonsterChoice()
+                                monster.step = 3
+                                speak('You defend '+monster.playerChoice+'. The '+monster.name+' attacks '+monster.monsterChoice+'. press enter to continue')
+                            }
+                            else{
+                                speak('Invalid input')
+                                setTimeout(() => {a()},200)
+                            }
+                        },200)
+                    }
+                    a()
+                }
+                else if (monster.step == 3){
+                    let roll = Roll(1,false,20)
+                    let txt = 'Now we must determine if the '+monster.name+' hits you. The '+monster.name+' must roll your armor class of '+player.armor.armorClass+
+                    'or higher on a 20-sided die. Rolling the die the '+monster.name+' got a '+roll.total+'.'
+                    if (roll.total>=player.armor.armorClass){
+                        monster.step = 4
+                        txt = txt+' The '+monster.name+' rolled higher than your armor class of '+player.armor.armorClass+' and hits you! press enter to continue'
+                    }
+                    else{
+                        monster.step = 2
+                        monster.turn = 'player'
+                        txt = txt+' The '+monster.name+' rolled lower than your armor class of '+player.armor.armorClass+' and misses you! press enter to continue'
+                    }
+                    speak(txt)
+                }
+                else if (monster.step == 4){
+                    let roll = Roll(monster.dice,false,monster.sides)
+                    let dmg = roll.total
+                    let txt = 'Rolling for damage the '+monster.name+' got '+roll.rolls+' for a total of '+dmg
+                    if (monster.playerChoice == monster.monsterChoice){
+                        dmg = Math.ceil(dmg/2)
+                        player.hp -= dmg
+                        if(player.hp<0){player.hp=0}
+                        txt = txt+". but since you successfully defended the attack the "+monster.name+" only does half damage rounded up for a total of "+dmg+' damage.'+
+                        ' So you have '+player.hp+' hit points left'
+                    }
+                    else{
+                        player.hp -= dmg
+                        if(player.hp<0){player.hp=0}
+                        txt = txt+'. So you take '+dmg+' damage. You now have '+player.hp+' hit points left'
+                    }
+                    if (player.hp == 0){
+                        let roll = Roll(1,false,20)
+                        let total = roll.total+player.wisdomBonus
+                        txt = txt+'. You are dead. but wait it is nor over yet, lets see if the gods will revive you. When you are revived you start back at the start of the dungeon with half of your max hitpoints remaining.'+
+                        ' This requires a wisdom test. each time you are revived it becomes harder and harder to be revived again and can only be done up to 3 times. You have '+revivesLeft+' revives left.'+
+                        ' On order to be revived you need to roll an '+mustRoll+' or higher on a 20-sided die. This requires a wisdom test. Your wisdom of '+player.wisdom+' gives your roll a bonus of '+player.wisdomBonus+
+                        '. Rolling the die you got a '+roll.total+' plus your wisdom bonus of '+player.wisdomBonus+' gets you a total of '+total+'.'
+                        if (total>=mustRoll){
+                            mustRoll += 4
+                            revivesLeft -= 1
+                            monster.turn = undefined
+                            monster.step = 1
+                            room = 0
+                            player.hp = Math.ceil(player.max_hp/2)
+                            txt = txt+' You rolled higher than a '+mustRoll+' and the gods are pleased and revive you back at the start'
+                            speak(txt)
+                            setTimeout(() => {dungeon()},200)
+                        }
+                        else{
+                            txt = txt+' You rolled lower than a '+mustRoll+' and the gods leave you there for the monsters of the dungeon to feed on. press r to restart'
+                            speak(txt)
+                        }
+                    }
+                    else{
+                        speak(txt+'. press enter to continue')
+                        monster.turn = 'player'
+                        monster.step = 2
+                    }
+                }
+            }
+        }
+    }
+    if (e.key == 'r' && player.hp == 0){
+        location.reload()
     }
 })
